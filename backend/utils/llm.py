@@ -10,7 +10,7 @@ client = Groq(
 
 def generate_response(message: str, prefill:str = "") -> str:
     completion = client.chat.completions.create(
-        model="llama-3.2-90b-text-preview",
+        model="llama-3.2-3b-preview",
         messages=[
             {
                 "role": "system",

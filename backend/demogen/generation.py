@@ -51,27 +51,39 @@ import sys
 import os
 import json
 import random
+import asyncio
 
 sys.path.append(os.path.abspath('./'))
 
 from utils.llm import generate_response
 
-def generate_demo_set(num_people: int, age_range: str, median_income: str) -> list:
+async def generate_demo_set(num_people: int, age_range: str, median_income: str) -> list:
     '''Generates a set of num_people given age and income'''
-    raw_output = generate_response(message=f"Generate a set of {str(num_people)} people within the age range {age_range} within which the median income is {median_income}. Please try to be as accurate with your distribution representation as possible. Return your output as ONLY strictly JSON format. Include the following properties: name, age, income, gender, race, occupation, hobbies,marital_status, number_of_children", prefill="```json")
+    raw_output = generate_response(message=f"Generate a set of {str(num_people)} people within the age range {age_range} within which the median income is {median_income}. Please try to be as accurate with your distribution representation as possible. Return your output as ONLY strictly JSON format. Do not include plaintext. Include the following properties: name, age, income, gender, race, occupation, hobbies, marital_status, number_of_children", prefill="```json\n[\n   {")
     json_string = raw_output[raw_output.index("["):raw_output.rindex("]")+1]
     return list(json.loads(json_string))
 
-def generate_demographic() -> list:
-    '''Generates all sets of people in AGE_DEMO_GROUPS'''
-    demographic = []
+async def generate_demographic() -> list:
+    '''Generates all sets of people in AGE_DEMO_GROUPS asynchronously'''
+    tasks = []
     for age_range, age_range_data in AGE_DEMO_GROUPS.items():
-        sub_demo = generate_demo_set(age_range_data['population'], age_range, age_range_data['median_income'])
+        tasks.append(generate_demo_set(age_range_data['population'], age_range, age_range_data['median_income']))
+    
+    # Run all tasks asynchronously
+    all_demo_sets = await asyncio.gather(*tasks)
+
+    demographic = []
+    for sub_demo in all_demo_sets:
         for person in sub_demo:
             # Add persons home coordinates based on income
-            person["home"] = (
-                                ZIPCODES_COORDS_INCOME.get(person["income"] * random.uniform(0.75, 1.25)) or 
-                                ZIPCODES_COORDS_INCOME[min(ZIPCODES_COORDS_INCOME.keys(), 
-                                key = lambda key: abs(key-(person["income"] * random.uniform(0.75, 1.25))))]
-                            )
+            zipcode = (
+                        ZIPCODES_COORDS_INCOME.get(person["income"] * random.uniform(0.75, 1.25)) or 
+                        ZIPCODES_COORDS_INCOME[min(ZIPCODES_COORDS_INCOME.keys(), 
+                        key = lambda key: abs(key-(person["income"] * random.uniform(0.75, 1.25))))]
+                    )
+            person["home"] = (zipcode[0] + random.uniform(-0.001, 0.001), zipcode[1] + random.uniform(-0.001, 0.001))
+            demographic.append(person)
+
     return demographic
+
+# How to run ```x = asyncio.run(generate_demographic()))```
