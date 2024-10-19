@@ -8,21 +8,23 @@ client = Groq(
     api_key=os.environ.get("GROQ_API_KEY")
 )
 
-def generate_response(message: str, prefill:str = "") -> str:
+async def generate_response(system: str, user: str = "", model: str="llama3-groq-8b-8192-tool-use-preview") -> str:
     completion = client.chat.completions.create(
-        model="llama-3.2-3b-preview",
+        model=model,
         messages=[
             {
                 "role": "system",
-                "content": message
+                "content": system
             },
             {
                 "role": "user",
-                "content": prefill
+                "content": user
             }
         ],
         temperature=1,
-        max_tokens=2048,
+        max_tokens=8192,
         top_p=1,
+        response_format={"type": ""}
     )
+    
     return completion.choices[0].message.content
