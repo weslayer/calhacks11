@@ -1,0 +1,67 @@
+.sidebar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: auto; 
+  background-color: #8B0000;
+  color: white;
+  padding: 15px;
+  font-family: Arial, Helvetica, sans-serif;
+  border-radius: 0 10px 10px 0;
+  transition: transform 0.3s ease-in-out;
+}
+
+.sidebar.closed {
+  transform: translateX(-320px);
+  height: 550px;
+}
+
+.sidebar.open {
+  transform: translateX();
+  height: 550px;
+}
+
+.toggle-button {
+  position: absolute;
+  top: 0;
+  right: -18px;
+  height: 100%; /* Full height of the sidebar */
+  background-color: #fff;
+  color: #8B0000;
+  border: none;
+  border-radius: 0; /* No rounding for full height */
+  padding: 5px;
+  cursor: pointer;
+}
+
+.content {
+  margin-top: 5px; /* Adjusted for smaller spacing */
+}
+
+.section {
+  margin-bottom: 10px; /* Reduced margin for smaller spacing */
+}
+
+h2 {
+  font-size: 1.2em; /* Smaller header text */
+}
+
+p, label, strong, h3 {
+  font-size: 0.9em; /* Smaller text for other elements */
+}
+
+input[type="text"], input[type="number"], textarea {
+  width: calc(100% - 20px);
+}
+
+textarea {
+  height: 70px;
+  resize: none;
+}
+
+.begin-button {
+  background-color: #fff;
+  color: #8B0000;
+  border-radius: 5px;
+  padding: 10px;
+}
