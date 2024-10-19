@@ -22,7 +22,7 @@ def generate_response(message: str, prefill:str = "") -> str:
             }
         ],
         temperature=1,
-        max_tokens=1024,
+        max_tokens=2048,
         top_p=1,
     )
     return completion.choices[0].message.content
