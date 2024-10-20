@@ -52,8 +52,22 @@ function Map({children}) {
         el.style.height = '10px';
         el.style.borderRadius = '50%';
 
+        const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(
+          `<strong>Color:</strong> ${color}<br>
+           <strong>Latitude:</strong> ${latitude.toFixed(4)}<br>
+           <strong>Longitude:</strong> ${longitude.toFixed(4)}`
+        );
+
+        el.addEventListener('mouseenter', () => {
+          el.style.boxShadow = `0 0 0 3px rgba(255,255,255,0.5)`;
+        });
+        el.addEventListener('mouseleave', () => {
+          el.style.boxShadow = 'none';
+        });
+
         const marker = new mapboxgl.Marker(el)
           .setLngLat([longitude, latitude])
+          .setPopup(popup)
           .addTo(map.current);
         markersRef.current[`${longitude}-${latitude}`] = marker;
       }

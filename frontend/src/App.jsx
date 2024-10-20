@@ -3,6 +3,7 @@ import Map from './Map';
 import Marker from './Marker';
 import Sidebar from './Sidebar';
 import './App.css';
+import AnimatedCursor from "react-animated-cursor"
 
 const initialMarkerData = [
   { longitude: -122.4194, latitude: 37.7749, color: "red" }, 
@@ -71,6 +72,7 @@ function App() {
 
   return (
     <>
+    <AnimatedCursor />
       <Map>
         {markers.map((marker, index) => (
           <Marker key={index} {...marker} />
