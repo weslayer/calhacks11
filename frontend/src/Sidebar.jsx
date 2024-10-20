@@ -15,11 +15,10 @@ function Sidebar() {
       </button>
       {isOpen && (
         <div className="content">
-          <h2>INFERmary</h2>
-          <p>viral spread simulator</p>
+          <h1>INFERmary</h1>
+          <h3>viral spread simulator.</h3>
           <div className="section">
-            <label>City:</label>
-            <input type="text" value="San Francisco" readOnly />
+            <strong>City:</strong> San Francisco
           </div>
           <div className="section">
             <strong>Population:</strong> 788,478
