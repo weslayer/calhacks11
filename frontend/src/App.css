@@ -6,6 +6,14 @@ body, html {
   overflow: hidden;
 }
 
+* {
+  cursor: none;
+}
+
+.custom-cursor {
+  pointer-events: none;
+}
+
 .map-container {
   position: absolute;
   top: 0;

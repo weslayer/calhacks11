@@ -72,7 +72,10 @@ function App() {
 
   return (
     <>
-    <AnimatedCursor />
+    <AnimatedCursor 
+    outerScale={1}
+    trailingSpeed={1000000}
+    />
       <Map>
         {markers.map((marker, index) => (
           <Marker key={index} {...marker} />
