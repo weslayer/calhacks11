@@ -4,7 +4,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
 
-function Map({children}) {
+function Map({ children, agents }) {
   const mapContainer = useRef(null);
   const map = useRef(null);
   const markersRef = useRef({})
@@ -43,7 +43,7 @@ function Map({children}) {
     React.Children.forEach(children, child => {
       if (child.type.name === 'Marker') {
         const { longitude, latitude, color } = child.props;
-        
+
         // Create a custom dot marker
         const el = document.createElement('div');
         el.className = 'dot-marker';

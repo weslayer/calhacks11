@@ -4,16 +4,9 @@ import Marker from './Marker';
 import Sidebar from './Sidebar';
 import Footer from './Footer';
 import './App.css';
-
-const initialMarkerData = [
-  { longitude: -122.4194, latitude: 37.7749, color: "red" },
-  { longitude: -122.4, latitude: 37.8, color: "red" }
-];
-
-const nextMarkerDest = [
-  { longitude: -122.45, latitude: 37.75, color: "red" },
-  { longitude: -122.41, latitude: 37.81, color: "red" }
-];
+import _, { initial } from 'lodash'
+import 'date-fns'
+import { getAgents, stepAgents } from './services/agent';
 
 // Easing function (ease-in-out)
 function easeInOut(t) {
@@ -21,11 +14,40 @@ function easeInOut(t) {
 }
 
 function App() {
-  const [markers, setMarkers] = useState(initialMarkerData);
+  const [markers, setMarkers] = useState([]);
   const [isAnimating, setIsAnimating] = useState(false);
   const animationRef = useRef(null);
 
-  const animateMarkers = (startTime, duration) => {
+  const [time, setTime] = useState(12);
+
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      const newAgents = await getAgents();
+      setMarkers(newAgents.agents.map(agent => {
+        return {
+          color: 'red',
+          latitude: agent.coordinates[0],
+          longitude: agent.coordinates[1],
+        }
+      }))
+    }, 1000)
+
+    return () => {
+      clearInterval(interval)
+    }
+  }, [])
+
+  const stepForward = _.throttle(() => {
+    setTime(time + 1)
+    stepAgents(`${time % 24}:00`)
+  }, 2000)
+
+  const animateMarkers = (initialMarker, nextMarker, startTime, duration) => {
+    if (initialMarker.length === 0) {
+      console.log(nextMarker)
+      setMarkers(nextMarker)
+    }
+
     const animate = (currentTime) => {
       const elapsedTime = currentTime - startTime;
       const rawProgress = Math.min(elapsedTime / duration, 1);
@@ -33,8 +55,8 @@ function App() {
 
       setMarkers(prevMarkers =>
         prevMarkers.map((marker, index) => {
-          const startPos = initialMarkerData[index];
-          const endPos = nextMarkerDest[index];
+          const startPos = initialMarker[index];
+          const endPos = nextMarker[index];
 
           return {
             ...marker,
@@ -54,22 +76,6 @@ function App() {
     animationRef.current = requestAnimationFrame((time) => animate(time));
   };
 
-  useEffect(() => {
-    // Start animation on component mount
-    if (!isAnimating) {
-      setIsAnimating(true);
-      const animationDuration = 4000; // Duration in milliseconds
-      animateMarkers(performance.now(), animationDuration);
-    }
-
-    // Cleanup function to cancel animation if the component unmounts
-    return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
-    };
-  }, []);
-
   return (
     <>
       <Map>
@@ -78,7 +84,7 @@ function App() {
         ))}
       </Map>
       <Sidebar />
-      <Footer />
+      <Footer step={stepForward} time={time} setTime={setTime} />
     </>
   );
 }

@@ -64,47 +64,50 @@ async def create_agent(personal_info, port):
     @agent.on_message(model=Message, replies=AgentState)
     async def on_message(ctx: Context, sender: str, message: Message):
         print(f"{agent.address} has received {message.message} from {sender}")
-        if message.type == "step":
-            personal_info = agent.storage.get("data")
-            res = await generate_response(
-                system=f"""
-                You are are an assistant that will help a person figure out how they should be living their life: 
-                {agent.storage.get('personal_info')}
-                This is their daily schedule. You can suggest any deviations from it if you'd like:
-                {agent.storage.get('schedule')}
-                Here are a list of places next to them:
-                {extract_keys(await getNearbyPlaces(personal_info['home'][0], personal_info['home'][1]), ['name', 'distance', 'price', 'rating', 'location'])}
-                This is you and the person's chat history. 
-                {agent.storage.get('history')[-10:]}                
-                """,
-                user=f"""
-                Where should I go at {message.message}? YOU MUST RESPOND IN THIS EXACT JSON FORMAT AND YOU MUST HAVE A LATITUDE AND LONGITUDE (NO PLAINTEXT):
-                {{
-                    "activity": str,
-                    "place_name": str,
-                    "latitude": float,
-                    "longitude": float
-                }}
+        while True:
+            try: 
+                if message.type == "step":
+                    personal_info = agent.storage.get("data")
+                    res = await generate_response(
+                        system=f"""
+                        You are are an assistant that will help a person figure out how they should be living their life: 
+                        {agent.storage.get('personal_info')}
+                        This is their daily schedule. You can suggest any deviations from it if you'd like:
+                        {agent.storage.get('schedule')}
+                        Here are a list of places next to them:
+                        {extract_keys(await getNearbyPlaces(personal_info['home'][0], personal_info['home'][1]), ['name', 'distance', 'price', 'rating', 'location'])}
+                        This is you and the person's chat history. 
+                        {agent.storage.get('history')[-10:]}                
+                        """,
+                        user=f"""
+                        Where should I go at {message.message}? YOU MUST RESPOND IN THIS EXACT JSON FORMAT AND YOU MUST HAVE A LATITUDE AND LONGITUDE (NO PLAINTEXT):
+                        {{
+                            "activity": str,
+                            "place_name": str,
+                            "latitude": float,
+                            "longitude": float
+                        }}
 
-                {{\n    "activity": 
-                """
-            )
-            print(res)
-            res_json = json.loads(res)
-            agent.storage.set('coordinates', (res_json['latitude'], res_json['longitude']))
-            print(agent.storage.get('data')['home'], (res_json['latitude'], res_json['longitude']))
-            agent.storage.get('history').append(f'{message.message}: {res}')
-            await ctx.send(
-                sender, 
-                AgentState.parse_obj(dict({'address': sender, 'coordinates': (res_json['latitude'], res_json['longitude'])}, **agent.storage.get('data')))
-            )
+                        {{\n    "activity": 
+                        """
+                    )
+                    print(res)
+                    res_json = json.loads(res)
+                    agent.storage.set('coordinates', (res_json['latitude'], res_json['longitude']))
+                    print(agent.storage.get('data')['home'], (res_json['latitude'], res_json['longitude']))
+                    agent.storage.get('history').append(f'{message.message}: {res}')
+                    await ctx.send(
+                        sender, 
+                        AgentState.parse_obj(dict({'address': sender, 'coordinates': (res_json['latitude'], res_json['longitude'])}, **agent.storage.get('data')))
+                    )
 
-        elif message.type == "message":
-            agent.storage.get('history').append(f'Context: {message.message}')
+                elif message.type == "message":
+                    agent.storage.get('history').append(f'Context: {message.message}')
 
-    @agent.on_event("startup")
-    async def introduce_agent(ctx: Context):
-        ctx.logger.info(f"Hello, I'm agent {agent.name} and my address is {agent.address}.")
+                break
+
+            except:
+                pass
 
     return agent
 
