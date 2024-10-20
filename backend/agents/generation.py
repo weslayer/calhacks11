@@ -14,7 +14,7 @@ async def generate_demographic(age_groups, zipcode_income) -> list:
     async def generate_demo_set(num_people: int, age_range: str, median_income: str) -> list:
         '''Generates a set of num_people given age and income'''
         output = await generate_response(
-            system=f"Generate a set of exactly {str(num_people)} people within the age range {age_range} within which the median income is {median_income}. Please try to be as accurate with your distribution representation as possible. Return your output as ONLY strictly JSON format. You must include ONLY the following properties: name, age, income, gender, race, occupation, hobbies, marital_status, number_of_children",
+            system=f"Generate a set of EXACTLY {str(num_people)} person(s) within the age range {age_range} in which the median income is {median_income}. Please try to be as accurate with your distribution representation as possible. Return your output as ONLY strictly JSON format. You must include ONLY the following properties: name, age, income, gender, race, occupation, hobbies, marital_status, number_of_children",
             user="[\n   {",
         )
         print(output)

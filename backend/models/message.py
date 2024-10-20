@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from uagents import Model
 
-class Message(BaseModel):
+class Message(Model):
     message: str

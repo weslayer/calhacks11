@@ -2,7 +2,7 @@ import asyncio
 import uagents.experimental
 from agents.generation import generate_demographic
 from agents.agent import create_agents
-import uagents
+from uagents import Agent, Context, Protocol, Model
 from models.message import Message
 
 AGE_DEMO_GROUPS = {
@@ -54,6 +54,7 @@ ZIPCODES_COORDS_INCOME = {
     347725: (37.78854,-122.39387), #94105
 }
 
+ 
 async def main():
     demographics = None
     while True:
@@ -67,18 +68,20 @@ async def main():
 
     time = 0
 
-    proto = uagents.Protocol(name="proto", version="1.0")
-
+    # define master agent
     master_agent = uagents.Agent(name='master')
-    master_agent.include(proto)
-    @master_agent.on_interval(period=1.0)
-    async def on_interval(ctx: uagents.Context):
-        await ctx.broadcast(proto.digest, message=Message(message=str(time)))
+    master_agent.storage.set("agent_addresses", [agent.address for agent in agents])
 
-    bureau = uagents.Bureau(agents=agents)
+    # broadcast to all agents
+    @master_agent.on_interval(period=5.0)
+    async def on_interval(ctx: uagents.Context):
+        for address in master_agent.storage.get("agent_addresses"):
+            await ctx.send(address, Message(message="hello there"))
+
+    bureau = uagents.Bureau()
     bureau.add(master_agent)
     for agent in agents:
-        agent.include(proto)
+        bureau.add(agent)
         
     await bureau.run_async()
 
