@@ -1,22 +1,25 @@
 import asyncio
+import uagents.experimental
 from agents.generation import generate_demographic
 from agents.agent import create_agents
+import uagents
+from models.message import Message
 
 AGE_DEMO_GROUPS = {
     "Under 25": {
-        "population": 9,
+        "population": 1,
         "median_income": "$95,000"
     },
     "25 - 44": {
-        "population": 20,
+        "population": 1,
         "median_income": "$195,000"
     },
     "45 - 65": {
-        "population": 13,
+        "population": 1,
         "median_income": "$130,000"
     },
     "Over 65": {
-        "population": 8,
+        "population": 1,
         "median_income": "$65,000"
     }
 }
@@ -51,7 +54,32 @@ ZIPCODES_COORDS_INCOME = {
     347725: (37.78854,-122.39387), #94105
 }
 
-demographics = asyncio.run(generate_demographic(AGE_DEMO_GROUPS, ZIPCODES_COORDS_INCOME))
-print(demographics)
-agents = asyncio.run(create_agents(demographics))
-print(agent.storage.get('schedule') for agent in agents)
+async def main():
+    demographics = None
+    while True:
+        try: 
+            demographics = await generate_demographic(AGE_DEMO_GROUPS, ZIPCODES_COORDS_INCOME)
+            break
+        except:
+            pass
+    print(demographics)
+    agents = await create_agents(demographics)
+
+    time = 0
+
+    proto = uagents.Protocol(name="proto", version="1.0")
+
+    master_agent = uagents.Agent(name='master')
+    master_agent.include(proto)
+    @master_agent.on_interval(period=1.0)
+    async def on_interval(ctx: uagents.Context):
+        await ctx.broadcast(proto.digest, message=Message(message=str(time)))
+
+    bureau = uagents.Bureau(agents=agents)
+    bureau.add(master_agent)
+    for agent in agents:
+        agent.include(proto)
+        
+    await bureau.run_async()
+
+asyncio.run(main())
