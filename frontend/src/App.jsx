@@ -10,83 +10,86 @@ import { getAgents, stepAgents } from './services/agent';
 
 // Easing function (ease-in-out)
 function easeInOut(t) {
-  return t < 0.5 ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1;
+    return t < 0.5 ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1;
 }
 
 function App() {
-  const [markers, setMarkers] = useState([]);
-  const [isAnimating, setIsAnimating] = useState(false);
-  const animationRef = useRef(null);
+    const [markers, setMarkers] = useState([]);
+    const [isAnimating, setIsAnimating] = useState(false);
+    const animationRef = useRef(null);
 
-  const [time, setTime] = useState(12);
+    const [time, setTime] = useState(12);
 
-  useEffect(() => {
-    const interval = setInterval(async () => {
-      const newAgents = await getAgents();
-      setMarkers(newAgents.agents.map(agent => {
-        return {
-          color: 'red',
-          latitude: agent.coordinates[0],
-          longitude: agent.coordinates[1],
+    useEffect(() => {
+        const interval = setInterval(async () => {
+            const newAgents = await getAgents();
+            setMarkers(newAgents.agents.map(agent => {
+                console.log(agent)
+                return {
+                    name: agent.name,
+                    color: 'red',
+                    activity: agent.activity,
+                    latitude: agent.coordinates[0],
+                    longitude: agent.coordinates[1],
+                }
+            }))
+        }, 1000)
+
+        return () => {
+            clearInterval(interval)
         }
-      }))
-    }, 1000)
+    }, [])
 
-    return () => {
-      clearInterval(interval)
-    }
-  }, [])
+    const stepForward = _.throttle(() => {
+        setTime(time + 1)
+        stepAgents(`${time % 24}:00`)
+    }, 2000)
 
-  const stepForward = _.throttle(() => {
-    setTime(time + 1)
-    stepAgents(`${time % 24}:00`)
-  }, 2000)
+    const animateMarkers = (initialMarker, nextMarker, startTime, duration) => {
+        if (initialMarker.length === 0) {
+            console.log(nextMarker)
+            setMarkers(nextMarker)
+        }
 
-  const animateMarkers = (initialMarker, nextMarker, startTime, duration) => {
-    if (initialMarker.length === 0) {
-      console.log(nextMarker)
-      setMarkers(nextMarker)
-    }
+        const animate = (currentTime) => {
+            const elapsedTime = currentTime - startTime;
+            const rawProgress = Math.min(elapsedTime / duration, 1);
+            const easedProgress = easeInOut(rawProgress);
 
-    const animate = (currentTime) => {
-      const elapsedTime = currentTime - startTime;
-      const rawProgress = Math.min(elapsedTime / duration, 1);
-      const easedProgress = easeInOut(rawProgress);
+            setMarkers(prevMarkers =>
+                prevMarkers.map((marker, index) => {
+                    const startPos = initialMarker[index];
+                    const endPos = nextMarker[index];
 
-      setMarkers(prevMarkers =>
-        prevMarkers.map((marker, index) => {
-          const startPos = initialMarker[index];
-          const endPos = nextMarker[index];
+                    return {
+                        ...marker,
+                        longitude: startPos.longitude + (endPos.longitude - startPos.longitude) * easedProgress,
+                        latitude: startPos.latitude + (endPos.latitude - startPos.latitude) * easedProgress,
+                    };
+                })
+            );
 
-          return {
-            ...marker,
-            longitude: startPos.longitude + (endPos.longitude - startPos.longitude) * easedProgress,
-            latitude: startPos.latitude + (endPos.latitude - startPos.latitude) * easedProgress,
-          };
-        })
-      );
+            if (rawProgress < 1) {
+                animationRef.current = requestAnimationFrame((time) => animate(time));
+            } else {
+                setIsAnimating(false);
+            }
+        };
 
-      if (rawProgress < 1) {
         animationRef.current = requestAnimationFrame((time) => animate(time));
-      } else {
-        setIsAnimating(false);
-      }
     };
 
-    animationRef.current = requestAnimationFrame((time) => animate(time));
-  };
-
-  return (
-    <>
-      <Map>
-        {markers.map((marker, index) => (
-          <Marker key={index} {...marker} />
-        ))}
-      </Map>
-      <Sidebar />
-      <Footer step={stepForward} time={time} setTime={setTime} />
-    </>
-  );
+    return (
+        <>
+            <Map>
+                {markers.map((marker, index) => (
+                    <Marker key={index} {...marker} />
+                ))}
+            </Map>
+            <Sidebar />
+            <Footer step={stepForward} time={time} setTime={setTime} />
+        </>
+    );
 }
 
 export default App;

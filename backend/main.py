@@ -94,15 +94,15 @@ async def main():
         agent_states = []
         for address in master_agent.storage.get("agent_addresses"):
             await ctx.send(address, Message(message=req.message, type="step"))
-        # return Response(content="Success", status_code=200)
+        return Response(content="Success", status_code=200)
 
     @master_agent.on_message(model=AgentState, replies=Message)
     async def on_message(ctx: Context, sender: str, message: AgentState):
         for data in master_agent.storage.get("agent_data"):
-            if data['address'] == sender:
-                data = message
+            if data["address"] == sender:
+                data.update(message.dict())
 
-    bureau = Bureau()
+    bureau = Bureau(port=8000, endpoint='https://localhost:8000')
     bureau.add(master_agent)
     for agent in agents:
         bureau.add(agent)

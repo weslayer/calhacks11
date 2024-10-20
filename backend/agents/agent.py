@@ -60,7 +60,6 @@ async def create_agent(personal_info, port):
     agent.storage.set('history', [])
     agent.storage.set('schedule', schedule)
 
-
     @agent.on_message(model=Message, replies=AgentState)
     async def on_message(ctx: Context, sender: str, message: Message):
         print(f"{agent.address} has received {message.message} from {sender}")
@@ -80,7 +79,7 @@ async def create_agent(personal_info, port):
                         {agent.storage.get('history')[-10:]}                
                         """,
                         user=f"""
-                        Where should I go at {message.message}? YOU MUST RESPOND IN THIS EXACT JSON FORMAT AND YOU MUST HAVE A LATITUDE AND LONGITUDE (NO PLAINTEXT):
+                        Where should I go at {message.message}? YOU MUST RESPOND IN THIS EXACT JSON FORMAT AND YOU MUST HAVE A LATITUDE AND LONGITUDE (NO PLAINTEXT). BE SURE NOT TO RETURN THE EXACT LATITUDE AND LONGITUDE OF A LOCATION:
                         {{
                             "activity": str,
                             "place_name": str,
@@ -91,14 +90,22 @@ async def create_agent(personal_info, port):
                         {{\n    "activity": 
                         """
                     )
-                    print(res)
                     res_json = json.loads(res)
-                    agent.storage.set('coordinates', (res_json['latitude'], res_json['longitude']))
-                    print(agent.storage.get('data')['home'], (res_json['latitude'], res_json['longitude']))
+                    if (res_json['latitude'] and res_json['longitude']):
+                        agent.storage.set('coordinates', (res_json['latitude'], res_json['longitude']))
                     agent.storage.get('history').append(f'{message.message}: {res}')
                     await ctx.send(
                         sender, 
-                        AgentState.parse_obj(dict({'address': sender, 'coordinates': (res_json['latitude'], res_json['longitude'])}, **agent.storage.get('data')))
+                        AgentState.parse_obj(dict({
+                            'address': agent.address, 
+                            'coordinates': (
+                                res_json['latitude'] if res_json['latitude'] else agent.storage.get('coordinates')[0], 
+                                res_json['longitude'] if res_json['longitude'] else agent.storage.get('coordinates')[1]
+                            ),
+                            'activity': res_json['activity'],
+                        }, 
+                        **agent.storage.get('data'))
+                    )
                     )
 
                 elif message.type == "message":
@@ -106,8 +113,8 @@ async def create_agent(personal_info, port):
 
                 break
 
-            except:
-                pass
+            except Exception as e:
+                print(e)
 
     return agent
 
