@@ -1,9 +1,12 @@
 import asyncio
-import uagents.experimental
+import json
+from typing import Any, Dict
+from uagents.query import query
 from agents.generation import generate_demographic
 from agents.agent import create_agents
-from uagents import Agent, Context, Protocol, Model
+from uagents import Agent, Bureau, Context, Protocol, Model
 from models.message import Message
+from models.models import AgentInfoResponse
 
 AGE_DEMO_GROUPS = {
     "Under 25": {
@@ -69,16 +72,36 @@ async def main():
     time = 0
 
     # define master agent
-    master_agent = uagents.Agent(name='master')
+    master_agent = Agent(name='master')
     master_agent.storage.set("agent_addresses", [agent.address for agent in agents])
+    master_agent.storage.set("agent_data", [
+        dict({"address": agent.address, "coodinates": agent.storage.get("coordinates")}, **agent.storage.get("data"))
+    for agent in agents])
+
+    @master_agent.on_rest_get("/agents", AgentInfoResponse)
+    async def get_all_agents_current_state(ctx: Context) -> Dict[str, Any]:
+        return {"agents": master_agent.storage.get("agent_data")}
 
     # broadcast to all agents
-    @master_agent.on_interval(period=5.0)
-    async def on_interval(ctx: uagents.Context):
+    @master_agent.on_rest_post("/message", Message, Message)
+    async def broadcast_to_agents(ctx: Context, req: Message) -> Message:
         for address in master_agent.storage.get("agent_addresses"):
-            await ctx.send(address, Message(message="hello there"))
+            await ctx.send(address, Message(message=req.message, type="message"))
+    
+    @master_agent.on_rest_post("/step", Message, Message)
+    async def step(ctx: Context, req: Message) -> Message:
+        agent_states = []
+        for address in master_agent.storage.get("agent_addresses"):
+            await ctx.send(address, Message(message=req.message, type="step"))
 
-    bureau = uagents.Bureau()
+    @master_agent.on_message(model=Message, replies=Message)
+    async def on_message(ctx: Context, sender: str, message: Message):
+        for data in master_agent.storage.get("agent_data"):
+            if data['address'] == sender:
+                data = message.message
+
+
+    bureau = Bureau()
     bureau.add(master_agent)
     for agent in agents:
         bureau.add(agent)
