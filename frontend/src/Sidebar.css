@@ -7,7 +7,6 @@
   color: white;
   padding: 15px;
   font-family: Arial, Helvetica, sans-serif;
-  border-radius: 0 10px 10px 0;
   transition: transform 0.3s ease-in-out;
 }
 
@@ -17,6 +16,7 @@
 
 .sidebar.open {
   transform: translateX();
+  height: 550px;
 }
 
 .toggle-button {
