@@ -9,7 +9,6 @@ clients=[
   Groq(api_key=os.environ.get("GROQ_API_KEY2")),
   Groq(api_key=os.environ.get("GROQ_API_KEY3")),
   Groq(api_key=os.environ.get("GROQ_API_KEY4")),
-  Groq(api_key=os.environ.get("GROQ_API_KEY5"))
 ]
 
 client_num = 0

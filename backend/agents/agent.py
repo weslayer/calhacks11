@@ -61,7 +61,7 @@ async def create_agent(personal_info, port):
     agent.storage.set('schedule', schedule)
 
 
-    @agent.on_message(model=Message, replies=Message)
+    @agent.on_message(model=Message, replies=AgentState)
     async def on_message(ctx: Context, sender: str, message: Message):
         print(f"{agent.address} has received {message.message} from {sender}")
         if message.type == "step":
@@ -75,10 +75,10 @@ async def create_agent(personal_info, port):
                 Here are a list of places next to them:
                 {extract_keys(await getNearbyPlaces(personal_info['home'][0], personal_info['home'][1]), ['name', 'distance', 'price', 'rating', 'location'])}
                 This is you and the person's chat history. 
-                {agent.storage.get('history')}                
+                {agent.storage.get('history')[-10:]}                
                 """,
                 user=f"""
-                Where should I go at {message.message}? YOUR RESPONSE SHOULD ONLY BE IN THIS EXACT JSON FORMAT (NO PLAINTEXT):
+                Where should I go at {message.message}? YOU MUST RESPOND IN THIS EXACT JSON FORMAT AND YOU MUST HAVE A LATITUDE AND LONGITUDE (NO PLAINTEXT):
                 {{
                     "activity": str,
                     "place_name": str,
@@ -87,15 +87,16 @@ async def create_agent(personal_info, port):
                 }}
 
                 {{\n    "activity": 
-                """,
-                model="llama-3.2-90b-text-preview"
+                """
             )
+            print(res)
             res_json = json.loads(res)
             agent.storage.set('coordinates', (res_json['latitude'], res_json['longitude']))
+            print(agent.storage.get('data')['home'], (res_json['latitude'], res_json['longitude']))
             agent.storage.get('history').append(f'{message.message}: {res}')
             await ctx.send(
                 sender, 
-                AgentState.parseObj(dict({'address': sender, 'coordinates': (res_json['latitude'], res_json['longitude'])}, **agent.storage.get('data')))
+                AgentState.parse_obj(dict({'address': sender, 'coordinates': (res_json['latitude'], res_json['longitude'])}, **agent.storage.get('data')))
             )
 
         elif message.type == "message":

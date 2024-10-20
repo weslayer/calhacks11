@@ -6,7 +6,7 @@ from agents.generation import generate_demographic
 from agents.agent import create_agents
 from uagents import Agent, Bureau, Context, Protocol, Model
 from models.message import Message
-from models.models import AgentInfoResponse
+from models.models import AgentInfoResponse, AgentState
 
 AGE_DEMO_GROUPS = {
     "Under 25": {
@@ -94,11 +94,11 @@ async def main():
         for address in master_agent.storage.get("agent_addresses"):
             await ctx.send(address, Message(message=req.message, type="step"))
 
-    @master_agent.on_message(model=Message, replies=Message)
-    async def on_message(ctx: Context, sender: str, message: Message):
+    @master_agent.on_message(model=AgentState, replies=Message)
+    async def on_message(ctx: Context, sender: str, message: AgentState):
         for data in master_agent.storage.get("agent_data"):
             if data['address'] == sender:
-                data = message.message
+                data = message
 
 
     bureau = Bureau()
