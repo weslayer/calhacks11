@@ -7,13 +7,14 @@ class AgentInfoResponse(Model):
 class AgentState(Model):
     address: str
     coordinates: List
+    infected: bool
     name: str
     age: int
     income: int
     gender: str
     race: str
     occupation: str
-    hobbies: List
+    hobbies: str | List
     marital_status: str
     number_of_children: int
     home: List

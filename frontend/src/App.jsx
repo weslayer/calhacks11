@@ -27,8 +27,7 @@ function App() {
                 console.log(agent)
                 return {
                     name: agent.name,
-                    color: 'red',
-                    activity: agent.activity,
+                    color: agent.infected ? 'red' : 'white',
                     latitude: agent.coordinates[0],
                     longitude: agent.coordinates[1],
                 }

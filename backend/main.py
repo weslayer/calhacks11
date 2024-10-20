@@ -1,5 +1,6 @@
 import asyncio
 import json
+import random
 from typing import Any, Dict
 from fastapi import Response
 from uagents.query import query
@@ -70,13 +71,15 @@ async def main():
     print(demographics)
     agents = await create_agents(demographics)
 
+    agents[random.randint(0, len(agents) - 1)].storage.set("infected", True)
+
     time = 0
 
     # define master agent
     master_agent = Agent(name='master')
     master_agent.storage.set("agent_addresses", [agent.address for agent in agents])
     master_agent.storage.set("agent_data", [
-        dict({"address": agent.address, "coordinates": agent.storage.get("coordinates")}, **agent.storage.get("data"))
+        dict({"address": agent.address, "coordinates": agent.storage.get("coordinates"), "infected": agent.storage.get("infected")}, **agent.storage.get("data"))
     for agent in agents])
 
     @master_agent.on_rest_get("/agents", AgentInfoResponse)
@@ -88,10 +91,17 @@ async def main():
     async def broadcast_to_agents(ctx: Context, req: Message) -> Message:
         for address in master_agent.storage.get("agent_addresses"):
             await ctx.send(address, Message(message=req.message, type="message"))
+
+    def _get_distance(coordinate_1, coordinate_2):
+        return ((coordinate_1[0] - coordinate_2[0])**2 + (coordinate_1[1] - coordinate_2[1])**2)**0.5
     
     @master_agent.on_rest_post("/step", Message, Message)
     async def step(ctx: Context, req: Message) -> Message:
-        agent_states = []
+        for agent_data_1 in master_agent.storage.get("agent_data"):
+            for agent_data_2 in master_agent.storage.get("agent_data"):
+                if _get_distance(agent_data_1["coordinates"], agent_data_2["coordinates"]) < 0.01 and agent_data_1["infected"]:
+                    agent_data_2["infected"] = True
+
         for address in master_agent.storage.get("agent_addresses"):
             await ctx.send(address, Message(message=req.message, type="step"))
         return Response(content="Success", status_code=200)

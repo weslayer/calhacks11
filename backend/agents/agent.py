@@ -17,6 +17,7 @@ async def create_agent(personal_info, port):
     agent = Agent(
         name=personal_info["name"], 
         port=port,
+        endpoint=[f"https://localhost:{port}/endpoint"],
         seed=random.choice(string.ascii_letters)
     )
 
@@ -59,6 +60,7 @@ async def create_agent(personal_info, port):
     agent.storage.set('coordinates', personal_info['home'])
     agent.storage.set('history', [])
     agent.storage.set('schedule', schedule)
+    agent.storage.set('infected', False)
 
     @agent.on_message(model=Message, replies=AgentState)
     async def on_message(ctx: Context, sender: str, message: Message):
@@ -102,7 +104,7 @@ async def create_agent(personal_info, port):
                                 res_json['latitude'] if res_json['latitude'] else agent.storage.get('coordinates')[0], 
                                 res_json['longitude'] if res_json['longitude'] else agent.storage.get('coordinates')[1]
                             ),
-                            'activity': res_json['activity'],
+                            'infected': agent.storage.get('infected')
                         }, 
                         **agent.storage.get('data'))
                     )
