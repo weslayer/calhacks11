@@ -1,17 +1,17 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Map from './Map';
 import Marker from './Marker';
 import Sidebar from './Sidebar';
+import Footer from './Footer';
 import './App.css';
-import AnimatedCursor from "react-animated-cursor"
 
 const initialMarkerData = [
-  { longitude: -122.4194, latitude: 37.7749, color: "red" }, 
+  { longitude: -122.4194, latitude: 37.7749, color: "red" },
   { longitude: -122.4, latitude: 37.8, color: "red" }
 ];
 
 const nextMarkerDest = [
-  { longitude: -122.45, latitude: 37.75, color: "red" }, 
+  { longitude: -122.45, latitude: 37.75, color: "red" },
   { longitude: -122.41, latitude: 37.81, color: "red" }
 ];
 
@@ -31,11 +31,11 @@ function App() {
       const rawProgress = Math.min(elapsedTime / duration, 1);
       const easedProgress = easeInOut(rawProgress);
 
-      setMarkers(prevMarkers => 
+      setMarkers(prevMarkers =>
         prevMarkers.map((marker, index) => {
           const startPos = initialMarkerData[index];
           const endPos = nextMarkerDest[index];
-          
+
           return {
             ...marker,
             longitude: startPos.longitude + (endPos.longitude - startPos.longitude) * easedProgress,
@@ -68,20 +68,17 @@ function App() {
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, []); 
+  }, []);
 
   return (
     <>
-    <AnimatedCursor 
-    outerScale={1}
-    trailingSpeed={1000000}
-    />
       <Map>
         {markers.map((marker, index) => (
           <Marker key={index} {...marker} />
         ))}
       </Map>
       <Sidebar />
+      <Footer />
     </>
   );
 }
