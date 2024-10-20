@@ -3,6 +3,7 @@ from models.personal_info import PersonalInfo
 import base64
 import asyncio
 import uagents
+from models.message import Message
 
 async def create_agent(personal_info):
 
@@ -42,8 +43,28 @@ async def create_agent(personal_info):
         '''
     )
 
+    agent.storage.set('personal_info', personal_info)
     agent.storage.set('history', [])
     agent.storage.set('schedule', schedule)
+
+    @agent.on_message(model=Message, replies=Message)
+    async def on_message(ctx: uagents.Context, sender: str, message: Message):
+        if message.type == 'update':
+            res = generate_response(
+                system=f"""
+                You are are a person with this personal info, living their life: 
+                {agent.storage.get('personal_info')}
+                This is your daily schedule. You can deviate from it if you'd like:
+                {agent.storage.get('schedule')}
+                What are you going to do at {message}?
+                """,
+                user=f"""
+                {agent.storage.get('history')}
+                {message}: 
+                """
+            )
+            ctx.send(res)
+            agent.storage.get('history').append(f'{message}: {res}')
 
     return agent
 
