@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import './Sidebar.css';
 import { SlArrowLeft, SlArrowRight } from 'react-icons/sl'
+import { addContext } from './services/agent';
 
 function Sidebar() {
   const [isOpen, setIsOpen] = useState(true);
+  const [text, setText] = useState('');
 
   const toggleSidebar = () => {
     setIsOpen(!isOpen);
@@ -53,9 +55,12 @@ function Sidebar() {
           </div>
           <div className="flex flex-col text-white section gap-4">
             <div className='text-orange-300 font-semibold text-[30px] tracking-tight border-b-2'>Other Factors</div>
-            <textarea className='w-full p-2 text-red-800 rounded-md' placeholder="Describe any other factors in plain text..."></textarea>
+            <textarea className='w-full p-2 text-red-800 rounded-md' placeholder="Describe any other factors in plain text..." value={text} onChange={(e) => setText(e.target.value)}></textarea>
           </div>
-          <button className="begin-button">Begin Simulation</button>
+          <button className="begin-button" onClick={() => {
+            addContext(text)
+            setText('')
+          }}>Add Context</button>
         </div>
       </div>
     </div>

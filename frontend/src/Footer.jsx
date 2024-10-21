@@ -21,17 +21,18 @@ export default function Footer({ step, time, setTime }) {
               Day {parseInt(time / 24)}
             </div>
           </div>
-          <button className='bg-white h-full p-6' disabled={disabled} onClick={() => {
+          <button className={`${disabled ? 'bg-gray-400' : 'bg-white'} h-full p-6`} disabled={disabled} onClick={() => {
             setDisabled(true)
             setTimeout(() => {
               setDisabled(false)
-            }, 2000)
+            }, 20000)
             step()
+            console.log(time)
           }}>
             <SlArrowRight />
           </button>
         </div>
-      </div>
+      </div >
     </>
   )
 }

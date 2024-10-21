@@ -12,19 +12,19 @@ from models.models import AgentInfoResponse, AgentState
 
 AGE_DEMO_GROUPS = {
     "Under 25": {
-        "population": 1,
+        "population": 2,
         "median_income": "$95,000"
     },
     "25 - 44": {
-        "population": 1,
+        "population": 5,
         "median_income": "$195,000"
     },
     "45 - 65": {
-        "population": 1,
+        "population": 5,
         "median_income": "$130,000"
     },
     "Over 65": {
-        "population": 1,
+        "population": 3,
         "median_income": "$65,000"
     }
 }

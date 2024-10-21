@@ -24,7 +24,6 @@ function App() {
         const interval = setInterval(async () => {
             const newAgents = await getAgents();
             setMarkers(newAgents.agents.map(agent => {
-                console.log(agent)
                 return {
                     name: agent.name,
                     color: agent.infected ? 'red' : 'white',
